@@ -1,5 +1,5 @@
 import reconfort_io as rio
-from traitement_messages import reception_message, traitement_emotion
+from traitement_messages import reception_message, trouver_emotion
 from pathlib import Path
 
 BASE = Path(__file__).parent.parent 
@@ -13,7 +13,7 @@ for demande in scenario["demandes"]:
                        demande["message"], 
                        demande["resident"], 
                        carte['residents'])
-    print(numero, id_resident, position, traitement_emotion(mots, dico))
+    print(numero, id_resident, position, trouver_emotion(mots, dico))
 
 print(reception_message(100, "bonjour", "R2", carte["residents"]))
 #reception_message(99, "bonjour", "R9", carte["residents"]) cas d erreur car R9 fait pas parti de la liste des résidents
@@ -24,7 +24,7 @@ print(reception_message(100, "bonjour", "R2", carte["residents"]))
 
 #exemple de 6.1 ou sidere gagne contre seule 
 mots = rio.normaliser("Je suis sidéré, la télévision s'est allumée toute seule.")
-print(traitement_emotion(mots,dico))
+print(trouver_emotion(mots,dico))
 
 #test pour le cas ou il y a aucun mot reconnu
-print(traitement_emotion(["bonjour","merci"],dico))
+print(trouver_emotion(["bonjour","merci"],dico))
