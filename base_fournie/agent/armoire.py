@@ -1,3 +1,4 @@
+NB_COLONNES = 8
 
 def distance_roue(e1,e2,emotions): 
     """
@@ -58,3 +59,26 @@ def calculer_candidats(emotion, intensite, emotions, intensites):
                 })
 
     return sorted(candidats, key=lambda c: c["tri"])
+
+def trajet_selecteur(depart, arrivee):
+    resultat = []
+
+    diff_lignes = arrivee[0]-depart[0]
+    if diff_lignes > 0 : 
+        for _ in range(diff_lignes) : 
+            resultat.append("S")
+    elif diff_lignes < 0: 
+        for _ in range(diff_lignes): 
+            resultat.append("N")
+    
+
+    a = (arrivee[1] - depart[1])%NB_COLONNES
+    if a <= NB_COLONNES-a : 
+        for _ in range(a): 
+            resultat.append("E")
+    else: 
+        for _ in range(NB_COLONNES-a): 
+            resultat.append("O")
+
+    return resultat
+    
