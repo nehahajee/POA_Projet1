@@ -15,3 +15,46 @@ def distance_roue(e1,e2,emotions):
     e2_index = emotions.index(e2)
     ecart = abs(e2_index - e1_index)
     return min(ecart, len(emotions)-ecart)
+
+def calculer_candidats(emotion, intensite, emotions, intensites):
+    """Liste ordonnee des 15 casiers candidats (enonce 6.2).
+
+    Renvoie une liste de dictionnaires {"position", "type_remplacement",
+    "tri"}, triee du casier le plus souhaitable au moins souhaitable.
+    "type_remplacement" correspond au champ "repli" de la trace.
+    Ne regarde jamais le contenu des casiers.
+    """
+    candidats = []
+    i_emotion = emotions.index(emotion)
+    i_intensite = intensites.index(intensite)
+
+    for em in emotions:
+        distance = distance_roue(em, emotion, emotions)
+        if distance <= 2:
+            i_em = emotions.index(em)
+            if (i_em - i_emotion) % len(emotions) <= 2:
+                sens = 0  
+            else:
+                sens = 1   
+
+            for it in intensites:
+                i_it = intensites.index(it)
+                position_casier = [i_it, i_em]
+                ecart_intensite = abs(i_it - i_intensite)
+
+                if distance == 0 and ecart_intensite == 0:
+                    type_remplacement = "aucun"
+                elif distance == 0:
+                    type_remplacement = "intensite"
+                elif distance == 1:
+                    type_remplacement = "voisine_1"
+                else:
+                    type_remplacement = "voisine_2"
+
+                candidats.append({
+                    "position": position_casier,
+                    "type_remplacement": type_remplacement,
+                    "tri": (distance, ecart_intensite, i_it, sens),
+                })
+
+    return sorted(candidats, key=lambda c: c["tri"])
