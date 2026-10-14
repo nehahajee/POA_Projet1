@@ -61,6 +61,15 @@ def calculer_candidats(emotion, intensite, emotions, intensites):
     return sorted(candidats, key=lambda c: c["tri"])
 
 def trajet_selecteur(depart, arrivee):
+    """
+    Prend en entrée le départ et l'arrivée sous forme de [ligne,colonne](casier de l'armoire).
+
+    Renvoie le trajet à faire pour arrivée à la case arrivée en partant 
+    de la case départ donné préalablement, c'est-à-dire une liste de directions.
+    On fait d'abord le vertical, puis ensuite l'horizontal par le chemin le plus 
+    court(annexes C.3).
+    exemple: print(trajet_selecteur([1, 0], [1, 4]))  donne : ['E', 'E', 'E', 'E']
+    """
     resultat = []
 
     diff_lignes = arrivee[0]-depart[0]
@@ -72,6 +81,15 @@ def trajet_selecteur(depart, arrivee):
             resultat.append("N")
     
 
+    # pour les colonnes on fait modulo pour ne pas avoir de valeur 
+    # négatif lorsqu'on calcule la différence , par exemple si on veut aller 
+    # de 7 a 1 on obtient -6 mais en faisant modulo on obtient 2 ce qui correspond
+    # bien au nombre de pas a faire pour arriver a 1 
+
+    # a = nombre de pas vers la droite (E), nombre de colonnes - a = nombre
+    # de pas vers la gauche (O). On regarde si on prend le chemin de gauche
+    # ou de droite en comparant a avec le nombre de colonnes - a : à chaque
+    # fois on prend le chemin qui coûte le moins (à égalité, on va à droite).
     a = (arrivee[1] - depart[1])%NB_COLONNES
     if a <= NB_COLONNES-a : 
         for _ in range(a): 
