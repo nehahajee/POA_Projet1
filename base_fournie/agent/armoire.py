@@ -33,7 +33,7 @@ def calculer_candidats(emotion, intensite, emotions, intensites):
         distance = distance_roue(em, emotion, emotions)
         if distance <= 2:
             i_em = emotions.index(em)
-            if (i_em - i_emotion) % len(emotions) <= 2:
+            if (i_em - i_emotion) % len(emotions) <= 2: 
                 sens = 0  
             else:
                 sens = 1   
@@ -100,3 +100,37 @@ def trajet_selecteur(depart, arrivee):
 
     return resultat
     
+def fouiller_armoire(robot, candidats):
+    """
+    Fouille l'armoire en suivant la liste des candidats 
+    Entrée: Robot, qui est adjacent à l'armoire et ne possède pas encore d'objet. 
+    On utilise robot.selecteur, robot.contenu_casier,robot.chercher(direction) et robot.prendre(objet).
+    Candidats, une liste triee renvoyer par calculer candidats. 
+
+    On visite les candidats dans l'ordre et on prend l'objet du premier candidat garni de la liste.
+
+    Sortie: Renvoie (position du casier, type de remplacement, objet), ou
+    (None, None, None) si les 15 candidats sont vides : la demande echoue
+    alors avec le motif "armoire vide". 
+
+    """
+    casier_vus_vides = []
+    for candidat in candidats: 
+        if candidat["position"] not in casier_vus_vides :
+            trajet = trajet_selecteur( robot.selecteur,candidat["position"])
+            for direction in trajet: 
+                robot.chercher(direction)
+                if robot.contenu_casier is None : 
+                    casier_vus_vides.append(list(robot.selecteur))
+
+            if robot.contenu_casier is None: 
+                casier_vus_vides.append(list(robot.selecteur))
+            else:
+                objet = robot.contenu_casier 
+                return candidat["position"], candidat["type_remplacement"], objet 
+            
+    return None,None,None
+       
+
+            
+
