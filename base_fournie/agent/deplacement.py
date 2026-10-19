@@ -1,26 +1,12 @@
 """Deplacement generique du robot (feature/deplacement).
 
 Fonctions utilisees par deplacement_dict(), deplacement_resident() et
-deplacement_case_depart() :
+deplacement_armoire() :
 
-    trouver_chemin(position_actuelle, destination, carte)   -> chemin | None
-    deplacement(chemin, robot)                              -> bool
-    rejoindre(destination, robot)                           -> bool
+    trouver_chemin(position_actuelle, destination, carte)   
+    deplacement(chemin, robot)                             
+    rejoindre(destination, robot)                          
 
-Rappel de l'enonce (3.2) : le robot ne connait pas les murs. On ne lit donc
-JAMAIS le champ "grille" ici : trouver_chemin travaille sur la CARTE MENTALE
-du robot (voir carte_mentale.py), et suppose libre tout ce qu'il n'a pas
-encore vu (hypothese optimiste, annexe B.5).
-
-Contrat attendu de `carte` (carte mentale) :
-    carte.est_traversable((ligne, colonne)) -> bool
-
-Contrat attendu de `robot` :
-    robot.position : (ligne, colonne) actuelle
-    robot.carte    : la carte mentale
-    robot.avancer(direction) : execute UNE action AVANCER ("N", "S", "E", "O"),
-        la journalise dans la trace, met a jour robot.position, puis percoit
-        les 4 cases voisines et met a jour robot.carte.
 """
 
 from collections import deque
@@ -165,7 +151,7 @@ def rejoindre(destination, robot):
 
     C'est la boucle de l'annexe B.5 : planifier sur la carte mentale, avancer,
     et recommencer des qu'un mur decouvert invalide le plan. A utiliser dans
-    deplacement_dict(), deplacement_resident() et deplacement_case_depart().
+    deplacement_dict(), deplacement_resident() et deplacement_armoire().
 
     Retourne True une fois arrive. Retourne False si la destination est
     inaccessible (preuve : le parcours en largeur echoue sur la carte
@@ -185,3 +171,15 @@ def rejoindre(destination, robot):
             # arriver que si robot.avancer ne deplace pas le robot.
             raise RuntimeError("deplacement sans progres : verifier robot.avancer")
         precedent = chemin
+
+
+""" Amène le robot sur une case libre adjacente au dictionnaire. True si arrivé, False si inaccessible."""
+def deplacement_dict(robot, pos):
+    return rejoindre(cases_adjacentes(pos), robot)
+
+def deplacement_armoire(robot, pos):
+    return rejoindre(cases_adjacentes(pos), robot)
+
+def deplacement_resident(robot, pos):
+    # False = "resident inaccessible"
+    return rejoindre(cases_adjacentes(pos), robot)
