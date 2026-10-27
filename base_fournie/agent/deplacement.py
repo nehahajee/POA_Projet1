@@ -27,13 +27,13 @@ DIRECTIONS = {
 # ---------------------------------------------------------------------------
 
 def case_voisine(position, direction):
-    """Case obtenue en faisant un pas dans `direction` depuis `position`."""
-    dl, dc = DIRECTIONS[direction]
+    """Case(position) obtenue en faisant un pas dans `direction` depuis `position`."""
+    dl, dc = DIRECTIONS[direction] #delta ligne, delta colonne
     return (position[0] + dl, position[1] + dc)
 
 
 def cases_adjacentes(position):
-    """Les 4 cases orthogonalement adjacentes, dans l'ordre N, S, E, O.
+    """Retourne les 4 cases orthogonalement adjacentes, dans l'ordre N, S, E, O.
 
     Utile pour construire la destination quand la cible (dictionnaire,
     armoire, resident) n'est pas traversable : le robot doit se placer sur
@@ -44,7 +44,7 @@ def cases_adjacentes(position):
 
 def direction_vers(depart, suivante):
     """Direction ("N", "S", "E", "O") pour passer de `depart` a `suivante`.
-
+    Utile pour connaitre la prochaine direction
     Leve ValueError si les deux cases ne sont pas orthogonalement voisines.
     """
     for direction in DIRECTIONS:
@@ -77,7 +77,7 @@ def trouver_chemin(position_actuelle, destination, carte):
     mentale ne permet d'atteindre aucune destination.
 
     Comme la carte mentale contient au moins autant de cases libres que la
-    realite (annexe B.6), None prouve qu'aucun chemin n'existe pour de bon.
+    realité (annexe B.6), None prouve qu'aucun chemin n'existe pour de bon.
     """
     depart = tuple(position_actuelle)
     arrivees = _en_ensemble(destination)
