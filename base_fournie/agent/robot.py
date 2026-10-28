@@ -8,6 +8,7 @@ a percu, plus les positions donnees au depart (enonce 3.2).
 """
 
 from deplacement import case_voisine, cases_adjacentes
+from armoire import Roue, NB_COLONNES
 
 # Symbole utilise par afficher() pour chaque type de case connu.
 SYMBOLES = {
@@ -154,3 +155,45 @@ class Robot:
                                argument=argument,
                                perception=self.perception,
                                contenu_casier=self.contenu_casier)
+
+    def avancer(self, direction):
+        """Action AVANCER (enonce 3.4) : un pas vers direction ("N", "S",
+        "E" ou "O"). La case visee doit etre libre en realite : on demande a
+        l'environnement, pas a la carte mentale, qui suppose libres les cases
+        inconnues. Leve ValueError sinon, sans rien ecrire dans la trace."""
+        case = case_voisine(self.position, direction)
+        if not self.env.est_libre(case):
+            raise ValueError(f"AVANCER {direction} illegal depuis {self.position} : "
+                             f"la case {case} n'est pas libre")
+        self._journaliser("AVANCER", direction)
+        self.position = case
+        self.percevoir()
+
+    def chercher(self, direction):
+        """Action CHERCHER (enonce 3.4, annexe C.2) : deplace le selecteur de
+        l'armoire d'un casier. N et S changent la ligne, sans boucler ; E et O
+        changent la colonne, qui boucle de 7 a 0 (Roue). Leve ValueError si le
+        robot n'est pas devant l'armoire, ou pour N en ligne 0 et S en ligne 2."""
+        if not self.est_adjacent(self.armoire):
+            raise ValueError(f"CHERCHER {direction} illegal depuis {self.position} : "
+                             f"le robot n'est pas adjacent a l'armoire")
+
+        ligne = self.selecteur[0]
+        colonne = self.selecteur[1]
+        if (direction == "N" and ligne == 0) or (direction == "S" and ligne == 2):
+            raise ValueError(f"CHERCHER {direction} illegal depuis le casier "
+                             f"{self.selecteur} : les lignes ne bouclent pas")
+
+        self._journaliser("CHERCHER", direction)
+
+        colonnes = Roue(range(NB_COLONNES))
+        if direction == "N":
+            self.selecteur[0] = ligne - 1
+        elif direction == "S":
+            self.selecteur[0] = ligne + 1
+        elif direction == "E":
+            self.selecteur[1] = colonnes.voisin(colonne, 1)
+        elif direction == "O":
+            self.selecteur[1] = colonnes.voisin(colonne, -1)
+
+        self.percevoir()
