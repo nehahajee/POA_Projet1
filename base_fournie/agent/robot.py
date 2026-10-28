@@ -7,7 +7,7 @@ Le robot ne lit jamais la grille de la carte : il ne connait que ce qu'il
 a percu, plus les positions donnees au depart (enonce 3.2).
 """
 
-from deplacement import case_voisine
+from deplacement import case_voisine, cases_adjacentes
 
 # Symbole utilise par afficher() pour chaque type de case connu.
 SYMBOLES = {
@@ -106,3 +106,51 @@ class CarteMentale:
                     texte += "?"
             lignes.append(texte)
         return "\n".join(lignes)
+
+class Robot: 
+    def __init__(self, env, connaissances, casier_depart, trace): 
+        self.env = env 
+        self.trace = trace 
+        self.selecteur = list(casier_depart)
+        self.armoire = tuple(connaissances["armoire"]["position"])
+        self.dictionnaire = tuple(connaissances["dictionnaire"]["position"])
+        self.residents = {}
+        for resident in connaissances["residents"]:
+            self.residents[resident["id"]] = tuple(resident["position"])
+
+        self.position = tuple(connaissances["depart_robot"])
+        self.carte = CarteMentale(connaissances["dimensions"]["hauteur"], connaissances["dimensions"]["largeur"],
+                                  self.armoire, self.dictionnaire, self.residents.values())
+
+        self.objet_porte = None
+        self.demande = None
+        self.perception = None
+        self.contenu_casier = None
+        self.percevoir() 
+
+    def est_adjacent(self, cible):
+        """Vrai si le robot est sur une case orthogonalement adjacente a
+        cible (enonce 3.1), condition pour interagir avec elle."""
+        return self.position in cases_adjacentes(tuple(cible))
+
+    def percevoir(self):
+        """Perception (enonce 3.2) : les 4 cases voisines, inscrites dans la
+        carte mentale, et le contenu du casier courant si le robot est
+        devant l'armoire (None sinon, enonce 5.5)."""
+        self.perception = self.env.percevoir(self.position)
+        self.carte.mettre_a_jour(self.position, self.perception)
+        if self.est_adjacent(self.armoire):
+            self.contenu_casier = self.env.contenu_casier(self.selecteur)
+        else:
+            self.contenu_casier = None
+
+    def _journaliser(self, action, argument=None):
+        """Ajoute un pas a la trace avec l'etat AVANT l'action : a appeler
+        dans chaque action, avant de modifier position ou selecteur."""
+        self.trace.ajouter_pas(demande=self.demande,
+                               position=self.position,
+                               casier=self.selecteur,
+                               action=action,
+                               argument=argument,
+                               perception=self.perception,
+                               contenu_casier=self.contenu_casier)
