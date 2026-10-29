@@ -203,7 +203,11 @@ class TestAvancer(unittest.TestCase):
         self.assertEqual(len(self.trace.pas), 1)
 
     def test_avancer_dans_un_mur_refuse(self):
-        self.skipTest("a ecrire")
+        # depuis (6, 1), la case a l'ouest (6, 0) est un mur
+        with self.assertRaises(ValueError):
+            self.robot.avancer("O")
+        self.assertEqual(len(self.trace.pas), 0)
+        self.assertEqual(self.robot.position, (6, 1))
 
     def test_avancer_dans_un_meuble_refuse(self):
         amener_devant_armoire(self.robot)

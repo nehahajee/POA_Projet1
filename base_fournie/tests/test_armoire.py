@@ -1,7 +1,7 @@
 """Tests de armoire.py (enonce section 8, points 4 et 5).
 
 Lancement, depuis base_fournie :
-    python -m unittest tests.armoire_test -v
+    python -m unittest tests.test_armoire -v
 """
 import json
 import sys
