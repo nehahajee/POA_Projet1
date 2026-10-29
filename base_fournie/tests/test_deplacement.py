@@ -15,8 +15,8 @@ from unittest import mock
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "agent"))
 
-import deplacement as dep  # noqa: E402
-# from environnement import Environnement  # noqa: E402
+import deplacement as dep 
+from environnement import Environnement  # noqa: E402
 
 
 class CarteMentale:
@@ -44,8 +44,8 @@ class CarteMentale:
 
 class FauxRobot:
     def __init__(self, grille, depart):
-        # self.env = Environnement({"grille": grille}, {"casiers": []})
-        self.env = MondeSimule(grille) #Faux environnement
+        self.env = Environnement({"grille": grille}, {"casiers": []})
+        # self.env = MondeSimule(grille) #Faux environnement
         self.position = tuple(depart)
         # Le robot connait d'avance armoire, dictionnaire et residents.
         obstacles = [(l, c) for l, row in enumerate(grille)
@@ -66,7 +66,7 @@ class FauxRobot:
 
 
 class MondeSimule:
-    """Faux environnement"""
+    """Faux environnement: Utilisé juste pour le test - ne sert plus car environnement.py est desormais implementé"""
     SYMBOLES = {"#": "mur", ".": "libre", "R": "libre",
                 "A": "armoire", "D": "dictionnaire", "P": "resident"}
 
