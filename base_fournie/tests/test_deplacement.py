@@ -13,9 +13,9 @@ from pathlib import Path
 from unittest import mock
 
 RACINE = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(RACINE))
+sys.path.insert(0, str(RACINE / "agent"))
 
-from agent import deplacement as dep  # noqa: E402
+import deplacement as dep  # noqa: E402
 # from environnement import Environnement  # noqa: E402
 
 
