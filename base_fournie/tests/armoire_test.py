@@ -1,11 +1,14 @@
 """Tests de armoire.py (enonce section 8, points 4 et 5).
 
-Lancement, depuis base_fournie/agent :
-    python -m unittest armoire_test -v
+Lancement, depuis base_fournie :
+    python -m unittest tests.armoire_test -v
 """
 import json
+import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "agent"))
 
 from armoire import (Roue, distance_roue, calculer_candidats,
                      trajet_selecteur, fouiller_armoire)
