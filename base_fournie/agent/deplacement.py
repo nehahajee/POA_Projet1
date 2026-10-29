@@ -9,7 +9,7 @@ deplacement_armoire() :
 
 """
 
-from collections import deque
+from collections import deque # noqa: E402
 
 # Effet de chaque direction sur (ligne, colonne) -- enonce 3.1.
 # L'ordre est fixe : il rend le choix entre deux chemins de meme longueur
