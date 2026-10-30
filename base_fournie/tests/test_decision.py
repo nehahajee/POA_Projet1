@@ -1,6 +1,6 @@
 """Tests de feature/boucle-agent : decision.py
 
-    python -m unittest discover -s tests -v      (depuis la racine)
+    python -m unittest discover -s tests -v      (depuis base_fournie)
 
 Robot leve ValueError si une action est illegale (AVANCER dans un mur, PRENDRE casier vide, DONNER pas
 adjacent...). Donc "le test passe" veut aussi dire "toutes les actions de la
@@ -56,9 +56,13 @@ def carte_mini(grille, residents=None):
 
 
 def fabriquer_robot(carte, armoire=ARMOIRE):
+    """Vrai Robot : l'Environnement recoit la carte complete, le Robot
+    seulement les connaissances, c'est-a-dire la carte sans la grille
+    (enonce 3.3)."""
     trace = rio.Trace(carte["nom"], "test", ["a", "b"])
     env = Environnement(carte, armoire)
-    return Robot(env, carte, armoire["casier_depart"], trace)
+    connaissances = {cle: valeur for cle, valeur in carte.items() if cle != "grille"}
+    return Robot(env, connaissances, armoire["casier_depart"], trace)
 
 
 def armoire_vide():

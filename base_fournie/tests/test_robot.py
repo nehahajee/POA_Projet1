@@ -13,8 +13,9 @@ RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "agent"))
 
 from robot import CarteMentale, Robot  # noqa: E402
-from deplacement import trouver_chemin, case_voisine, DIRECTIONS  # noqa: E402
+from deplacement import trouver_chemin  # noqa: E402
 from reconfort_io import Trace  # noqa: E402
+from environnement import Environnement  # noqa: E402
 
 
 def charger_json(chemin):
@@ -22,48 +23,12 @@ def charger_json(chemin):
         return json.load(f)
 
 
-SYMBOLES_GRILLE = {"#": "mur", ".": "libre", "R": "libre",
-                   "A": "armoire", "D": "dictionnaire", "P": "resident"}
-
-
-class FauxEnvironnement:
-    """Joue le simulateur : lui seul lit la grille et les objets des casiers.
-    Il a les trois methodes que le Robot appelle."""
-
-    def __init__(self, carte, armoire):
-        self.grille = carte["grille"]
-        self.casiers = {}
-        for c in armoire["casiers"]:
-            self.casiers[(c["ligne"], c["colonne"])] = c["objet"]
-
-    def dans_la_grille(self, position):
-        l, c = position
-        return 0 <= l < len(self.grille) and 0 <= c < len(self.grille[0])
-
-    def percevoir(self, position):
-        resultat = {}
-        for direction in DIRECTIONS:
-            l, c = case_voisine(position, direction)
-            if self.dans_la_grille((l, c)):
-                resultat[direction] = SYMBOLES_GRILLE[self.grille[l][c]]
-            else:
-                resultat[direction] = "mur"
-        return resultat
-
-    def est_libre(self, position):
-        l, c = position
-        return self.dans_la_grille(position) and self.grille[l][c] in ".R"
-
-    def contenu_casier(self, casier):
-        return self.casiers.get(tuple(casier))
-
-
 def creer_robot():
     """Robot neuf sur appartement_01 avec armoire_standard : depart (6, 1),
     selecteur [1, 0]. Le robot recoit la carte SANS la grille (enonce 3.3)."""
     carte = charger_json(RACINE / "cartes" / "appartement_01.json")
     armoire = charger_json(RACINE / "donnees" / "armoire_standard.json")
-    env = FauxEnvironnement(carte, armoire)
+    env = Environnement(carte, armoire)
     connaissances = {cle: valeur for cle, valeur in carte.items() if cle != "grille"}
     trace = Trace(nom_carte="appartement_01", nom_scenario="test")
     robot = Robot(env, connaissances, armoire["casier_depart"], trace)

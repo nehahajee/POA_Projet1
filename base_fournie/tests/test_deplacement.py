@@ -1,9 +1,12 @@
 """Tests de feature/deplacement : deplacement.py
 
-FauxRobot joue le role du vrai Robot (robot.py, pas encore ecrit) : il a une
-position, une carte mentale, et un avancer() qui deplace, puis percoit. Le
-monde reel est `Environnement` simulé qui n'a pas encore été implementé.
+trouver_chemin est teste seul, avec CarteConnue (une carte entierement
+connue). deplacement et rejoindre sont testes avec le vrai Robot et le vrai
+Environnement : le Robot ne recoit pas la grille, seulement les positions
+connues, et leve ValueError si un pas est illegal.
 
+Lancement, depuis base_fournie :
+    python -m unittest tests.test_deplacement -v
 """
 
 import json
@@ -15,76 +18,10 @@ from unittest import mock
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE / "agent"))
 
-import deplacement as dep 
+import reconfort_io as rio  # noqa: E402
+import deplacement as dep  # noqa: E402
 from environnement import Environnement  # noqa: E402
-
-
-class CarteMentale:
-    """Carte mentale minimale (a remplacer par celle de robot.py)."""
-
-    def __init__(self, hauteur, largeur, obstacles_connus=()):
-        self.hauteur, self.largeur = hauteur, largeur
-        self._murs = set()
-        self._obstacles = {tuple(c) for c in obstacles_connus}
-
-    def est_traversable(self, case):
-        l, c = case
-        if not (0 < l < self.hauteur - 1 and 0 < c < self.largeur - 1):
-            return False  # le bord est toujours un mur
-        return tuple(case) not in self._murs | self._obstacles  # inconnu = libre
-
-    def mettre_a_jour(self, position, perception):
-        for direction, valeur in perception.items():
-            case = dep.case_voisine(position, direction)
-            if valeur == "mur":
-                self._murs.add(case)
-            elif valeur != "libre":
-                self._obstacles.add(case)
-
-
-class FauxRobot:
-    def __init__(self, grille, depart):
-        self.env = Environnement({"grille": grille}, {"casiers": []})
-        # self.env = MondeSimule(grille) #Faux environnement
-        self.position = tuple(depart)
-        # Le robot connait d'avance armoire, dictionnaire et residents.
-        obstacles = [(l, c) for l, row in enumerate(grille)
-                     for c, ch in enumerate(row) if ch in "ADP"]
-        self.carte = CarteMentale(len(grille), len(grille[0]), obstacles)
-        self.nb_pas = 0
-        self._percevoir()
-
-    def _percevoir(self):
-        self.carte.mettre_a_jour(self.position, self.env.percevoir(self.position))
-
-    def avancer(self, direction):
-        cible = dep.case_voisine(self.position, direction)
-        assert self.env.est_libre(cible), f"deplacement illegal vers {cible}"
-        self.position = cible
-        self.nb_pas += 1
-        self._percevoir()
-
-
-class MondeSimule:
-    """Faux environnement: Utilisé juste pour le test - ne sert plus car environnement.py est desormais implementé"""
-    SYMBOLES = {"#": "mur", ".": "libre", "R": "libre",
-                "A": "armoire", "D": "dictionnaire", "P": "resident"}
-
-    def __init__(self, grille):
-        self.grille = grille
-
-    def percevoir(self, position):
-        resultat = {}
-        for direction in dep.DIRECTIONS:
-            l, c = dep.case_voisine(position, direction)
-            dans = 0 <= l < len(self.grille) and 0 <= c < len(self.grille[0])
-            resultat[direction] = self.SYMBOLES[self.grille[l][c]] if dans else "mur"
-        return resultat
-
-    def est_libre(self, position):
-        l, c = position
-        return (0 <= l < len(self.grille) and 0 <= c < len(self.grille[0])
-                and self.grille[l][c] in ".R")
+from robot import Robot  # noqa: E402
 
 
 class CarteConnue:
@@ -105,6 +42,35 @@ def adjacentes(a, b):
 
 def charger_carte_json(nom):
     return json.loads((RACINE / "cartes" / f"{nom}.json").read_text("utf-8"))
+
+
+def robot_sur_carte(carte):
+    """Vrai Robot sur une carte complete. L'Environnement lit la grille, le
+    Robot ne recoit que les connaissances, c'est-a-dire la carte sans la
+    grille (enonce 3.3). Aucun casier : on ne teste que les deplacements."""
+    env = Environnement(carte, {"casiers": []})
+    connaissances = {cle: valeur for cle, valeur in carte.items() if cle != "grille"}
+    return Robot(env, connaissances, [1, 0], rio.Trace(carte["nom"], "test"))
+
+
+def robot_sur(grille, depart):
+    """Vrai Robot sur une petite grille ecrite a la main. Les positions de
+    l'armoire (A), du dictionnaire (D) et des residents (P) sont lues dans la
+    grille pour fabriquer la carte, comme dans un fichier JSON."""
+    carte = {"nom": "mini", "grille": grille,
+             "dimensions": {"hauteur": len(grille), "largeur": len(grille[0])},
+             "depart_robot": list(depart), "residents": []}
+    for l, ligne in enumerate(grille):
+        for c, symbole in enumerate(ligne):
+            if symbole == "A":
+                carte["armoire"] = {"position": [l, c]}
+            elif symbole == "D":
+                carte["dictionnaire"] = {"position": [l, c]}
+            elif symbole == "P":
+                numero = len(carte["residents"]) + 1
+                carte["residents"].append({"id": f"P{numero}", "nom": "test",
+                                           "position": [l, c]})
+    return robot_sur_carte(carte)
 
 
 class TestTrouverChemin(unittest.TestCase):
@@ -157,30 +123,30 @@ class TestTrouverChemin(unittest.TestCase):
 
 class TestDeplacement(unittest.TestCase):
     def test_chemin_vide_ou_none(self):
-        robot = FauxRobot(["###", "#R#", "###"], (1, 1))
+        robot = robot_sur(["AD#", "#R#", "###"], (1, 1))
         self.assertFalse(dep.deplacement(None, robot))
         self.assertFalse(dep.deplacement([], robot))
 
     def test_chemin_qui_ne_part_pas_du_robot(self):
-        robot = FauxRobot(["#####", "#R..#", "#####"], (1, 1))
+        robot = robot_sur(["#AD##", "#R..#", "#####"], (1, 1))
         self.assertFalse(dep.deplacement([(1, 2), (1, 3)], robot))
         self.assertEqual(robot.position, (1, 1))
 
     def test_suit_un_chemin_libre(self):
-        robot = FauxRobot(["#####", "#R..#", "#####"], (1, 1))
+        robot = robot_sur(["#AD##", "#R..#", "#####"], (1, 1))
         self.assertTrue(dep.deplacement([(1, 1), (1, 2), (1, 3)], robot))
         self.assertEqual(robot.position, (1, 3))
-        self.assertEqual(robot.nb_pas, 2)
+        self.assertEqual(len(robot.trace.pas), 2)
 
     def test_s_arrete_avant_un_mur_decouvert(self):
-        # Plan tout droit vers l'est ; le mur (1,3) est decouvert en arrivant
+        # Plan tout droit vers l'est ; le mur (1, 3) est decouvert en arrivant
         # en (1,2). deplacement doit s'arreter la, sans jamais entrer dans le
-        # mur (FauxRobot leverait une erreur).
-        grille = ["#######",
+        # mur (Robot leverait ValueError).
+        grille = ["##AD###",
                   "#R.#..#",
                   "#.....#",
                   "#######"]
-        robot = FauxRobot(grille, (1, 1))
+        robot = robot_sur(grille, (1, 1))
         chemin = [(1, 1), (1, 2), (1, 3), (1, 4)]
         self.assertFalse(dep.deplacement(chemin, robot))
         self.assertEqual(robot.position, (1, 2))
@@ -191,7 +157,7 @@ class TestRejoindre(unittest.TestCase):
         # Annexe D : la partie droite n'est reliee que par (4, 11) ; le robot
         # part en ligne 6, decouvre le mur [6,7] et replanifie.
         carte = charger_carte_json("appartement_01")
-        robot = FauxRobot(carte["grille"], carte["depart_robot"])
+        robot = robot_sur_carte(carte)
         resident = tuple(carte["residents"][0]["position"])  # R1
         with mock.patch.object(dep, "trouver_chemin",
                                wraps=dep.trouver_chemin) as espion:
@@ -201,23 +167,23 @@ class TestRejoindre(unittest.TestCase):
         self.assertGreater(espion.call_count, 1, "aucune replanification ?")
 
     def test_resident_mure_termine_et_renvoie_false(self):
-        grille = ["#########",
+        grille = ["###AD####",
                   "#R......#",
                   "#.#####.#",
                   "#.#P..#.#",   # P emmure dans une piece close
                   "#.#####.#",
                   "#.......#",
                   "#########"]
-        robot = FauxRobot(grille, (1, 1))
+        robot = robot_sur(grille, (1, 1))
         # (3,4) est la seule case libre autour de P, mais elle est fermee.
         self.assertFalse(dep.rejoindre([(3, 4)], robot))
 
     def test_toutes_les_cartes_fournies_aucun_deplacement_illegal(self):
-        # FauxRobot leve AssertionError si un pas est illegal.
+        # Robot leve ValueError si un pas est illegal : le test echouerait.
         for chemin_carte in sorted((RACINE / "cartes").glob("appartement_*.json")):
             carte = json.loads(chemin_carte.read_text("utf-8"))
             with self.subTest(carte=carte["nom"]):
-                robot = FauxRobot(carte["grille"], carte["depart_robot"])
+                robot = robot_sur_carte(carte)
                 cibles = [carte["dictionnaire"]["position"],
                           carte["armoire"]["position"]]
                 cibles += [r["position"] for r in carte["residents"]]
@@ -231,7 +197,7 @@ class TestRejoindre(unittest.TestCase):
 class TestFonctionsDeNavigation(unittest.TestCase):
     def setUp(self):
         self.carte = charger_carte_json("appartement_01")
-        self.robot = FauxRobot(self.carte["grille"], self.carte["depart_robot"])
+        self.robot = robot_sur_carte(self.carte)
 
     def test_deplacement_dict(self):
         pos = tuple(self.carte["dictionnaire"]["position"])
@@ -249,14 +215,14 @@ class TestFonctionsDeNavigation(unittest.TestCase):
         self.assertTrue(adjacentes(self.robot.position, pos))
 
     def test_deplacement_resident_inaccessible(self):
-        grille = ["#########",
+        grille = ["###AD####",
                   "#R......#",
                   "#.#####.#",
                   "#.#P..#.#",
                   "#.#####.#",
                   "#.......#",
                   "#########"]
-        robot = FauxRobot(grille, (1, 1))
+        robot = robot_sur(grille, (1, 1))
         self.assertFalse(dep.deplacement_resident(robot, (3, 3)))
 
 
