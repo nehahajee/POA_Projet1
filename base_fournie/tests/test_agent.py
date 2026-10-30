@@ -2,7 +2,8 @@
 
 On teste le contrat d'appel (enonce section 2) : quatre arguments, code 0 si
 tout va bien, code non nul et aucune trace ecrite si un fichier est absent
-(section 5.6).
+ou refuse par la validation (section 5.6). Les fichiers casses, categorie
+par categorie, sont testes dans test_validation.py.
 
 Lancement, depuis base_fournie :
     python -m unittest tests.test_agent -v
@@ -76,6 +77,15 @@ class TestAgent(unittest.TestCase):
         code, _ = self.lancer([CARTE, SCENARIO, DONNEES, self.trace, "en_trop"])
         self.assertEqual(code, 2)
         self.assertFalse(self.trace.exists())
+
+    def test_scenario_4(self):
+        """scenario_01 (prevu pour appartement_01) lance sur appartement_02 :
+        la validation le refuse, code 1, message sur stderr, aucune trace."""
+        autre_carte = RACINE / "cartes" / "appartement_02.json"
+        code, erreur = self.lancer([autre_carte, SCENARIO, DONNEES, self.trace])
+        self.assertEqual(code, 1)
+        self.assertFalse(self.trace.exists())
+        self.assertNotEqual(erreur, "")
 
 
 if __name__ == "__main__":

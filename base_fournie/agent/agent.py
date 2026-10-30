@@ -1,6 +1,9 @@
 """
-Programme principal : le fichier est lancé avec 4 arguments, charge les fichiers, 
+Programme principal : le fichier est lancé avec 4 arguments, valide les fichiers(validation.py), 
 construit l'environnement et le robot, exécute le scénario et écrit la trace. 
+Lancement depuis base_fournie : python agent/agent.py <carte> <scenario> <dossier_donnees> <trace>
+En cas de fichier invalide, écrit un message d'erreur sur stderr et renvoie un 
+code différent de 0 (n'écrit aucune trace).
 """
 import sys
 from pathlib import Path
@@ -9,16 +12,18 @@ import reconfort_io as rio
 from robot import Robot
 from environnement import Environnement
 from decision import executer_scenario
+from validation import valider_entrees, ErreurDonnees
 
 EQUIPE = ["HAJEE Neha", "CAMARA ALY Zeinab"]
 
-def main(argv): 
-    """Paramètres : argv , la liste des arguments le nom du programme y compris
-    Renvoie: les trois cas c'est-à-dire, 0 en cas de succès, 1 pour un fichier invalide et 
-    2 pour un mauvais nombre d'arguments
-    """
-    if len(argv) != 5: 
-        print(" usage: python agent.py <carte> <scenario> <dossier_donnees> <trace>", file = sys.stderr)
+def main(argv):
+    """Lance le robot sur une carte et un scénario, et écrit la trace.
+        Paramètres : argv (la liste des arguments de la ligne de commande,
+        le nom du programme y compris).
+        Renvoie : 0 si tout s'est bien passé, 1 si un fichier est absent ou invalide 
+        et 2 si le nombre d'arguments est mauvais."""
+    if len(argv) != 5:
+        print("usage: python agent.py <carte> <scenario> <dossier_donnees> <trace>", file=sys.stderr)
         return 2
     
     chemin_carte = Path(argv[1])
@@ -26,16 +31,11 @@ def main(argv):
     chemin_dossier_donnees = Path(argv[3])
     chemin_trace = Path(argv[4])
 
-    try: 
-        carte = rio.charger_carte(chemin_carte)
-        scenario = rio.charger_scenario(chemin_scenario)
-        dico = rio.charger_dictionnaire(chemin_dossier_donnees / "dictionnaire.json")
-        armoire = rio.charger_armoire(chemin_dossier_donnees / f"{scenario['armoire']}.json")
+    try:
+        carte, scenario, dico, armoire = valider_entrees(chemin_carte, chemin_scenario, chemin_dossier_donnees)
 
-        #validation 
-
-    except rio.ErreurFichier as err:
-        print(f"erreur de chargement : {err}", file=sys.stderr)
+    except ErreurDonnees as err:
+        print(f"fichier invalide : {err}", file=sys.stderr)
         return 1
 
     env = Environnement(carte, armoire)
