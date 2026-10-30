@@ -15,7 +15,7 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 
-import reconfort_io as rio  # noqa: E402
+import agent.reconfort_io as rio  # noqa: E402
 from agent import decision  # noqa: E402
 from agent.robot import Robot  # noqa: E402
 from agent.environnement import Environnement  # noqa: E402
