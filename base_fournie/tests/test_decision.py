@@ -16,6 +16,7 @@ RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 sys.path.insert(0,str(RACINE / "agent"))
 
+
 import reconfort_io as rio  # noqa: E402
 import decision  # noqa: E402
 from robot import Robot  # noqa: E402
