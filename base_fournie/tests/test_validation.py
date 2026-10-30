@@ -16,9 +16,9 @@ import unittest
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(RACINE))
+sys.path.insert(0, str(RACINE / "agent"))
 
-import agent.validation as val  # noqa: E402
+import validation as val  # noqa: E402
 
 def lire(chemin):
     return json.loads((RACINE / chemin).read_text("utf-8"))

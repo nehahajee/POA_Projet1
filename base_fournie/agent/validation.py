@@ -10,12 +10,9 @@ avec un code non nul, SANS avoir ecrit de trace.
 Point d'entree :  carte, scenario, dico, armoire = valider_entrees(
                       chemin_carte, chemin_scenario, dossier_donnees)
 """
-import sys
 
 from pathlib import Path
 
-RACINE = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(RACINE)) # noqa: E402
 
 import reconfort_io as rio
 
