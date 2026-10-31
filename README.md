@@ -10,7 +10,13 @@ Langage : Python 3 (3.9 ou plus) - Aucune dépendance externe.
 
 ## Lancer
 
-Depuis le dossier `base_fournie` :
+Depuis la racine de l'archive (commande déclarée dans `rendu.json`) :
+
+```
+python3 base_fournie/agent/agent.py <carte.json> <scenario.json> <dossier_donnees> <trace_sortie.json>
+```
+
+Ou, depuis le dossier `base_fournie` :
 
 ```
 python agent/agent.py <carte.json> <scenario.json> <dossier_donnees> <trace_sortie.json>
@@ -44,11 +50,13 @@ partir des perceptions enregistrées dans la trace.
 
 ## Tester
 
+Depuis le dossier `base_fournie` :
+
 ```
 python -m unittest discover -s tests -v
 ```
 
-149 tests, sans dépendance. Ils couvrent les sept familles de l'énoncé :
+150 tests, sans dépendance. Ils couvrent les sept familles de l'énoncé :
 chemin de longueur connue (annexe B.3), replanification après un mur,
 lecture du dictionnaire (premier mot gagnant, aucun mot reconnu), sélecteur
 de l'armoire (bouclage colonne 7 → 0), règle de repli, validation des
@@ -73,7 +81,7 @@ que toutes les actions de la trace étaient légales.
 | `affichage.py` | rejoue une trace à l'écran (hors agent) |
 | `cartes_test/`, `donnees_test/` | nos propres cartes, voir plus bas |
 | `tests/` | tests unitaires et d'intégration |
-| `rapport/rapport.tex` | rapport de 3 pages |
+| `rapport.tex`, `Rapport_POA_SMA.pdf` | rapport de 3 pages (à la racine) |
 
 **Séparation perception / mémoire / décision / action.** Le robot ne reçoit
 jamais la grille : `agent.py` lui passe la carte *sans* le champ `grille`, et
@@ -130,7 +138,7 @@ python agent/agent.py cartes_test/test_mure.json cartes_test/scenario_mure.json 
 
 **Ce qui marche.**
 Les cinq appartements fournis et nos cinq cartes de test se terminent sans
-erreur, sans action illégale, avec les livraisons attendues. Les 149 tests
+erreur, sans action illégale, avec les livraisons attendues. Les 150 tests
 passent. Les fichiers invalides produisent un message sur `stderr`, un code
 non nul et aucune trace. La replanification et la preuve d'inaccessibilité
 fonctionnent sans jamais lire la grille.
@@ -153,4 +161,4 @@ fonctionnent sans jamais lire la grille.
 
 ## Vidéo
 
-`demo.mp4`, également déclarée dans `rendu.json`.
+`demonstration_video.mp4`, également déclarée dans `rendu.json`.

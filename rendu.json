@@ -1,0 +1,9 @@
+{
+  "format": "robot-reconfort/rendu",
+  "version": 1,
+  "equipe": ["HAJEE Neha", "CAMARA ALY Zeinab"],
+  "langage": "Python 3",
+  "preparation": [],
+  "commande": ["python3", "base_fournie/agent/agent.py"],
+  "video": "demonstration_video.mp4"
+}

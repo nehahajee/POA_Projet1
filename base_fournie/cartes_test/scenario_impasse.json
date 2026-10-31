@@ -1,0 +1,19 @@
+{
+  "format": "robot-reconfort/scenario",
+  "version": 1,
+  "nom": "scenario_impasse",
+  "carte": "test_impasse",
+  "armoire": "armoire_standard",
+  "demandes": [
+    {
+      "numero": 1,
+      "resident": "R1",
+      "message": "Je suis anxieux depuis ce matin."
+    },
+    {
+      "numero": 2,
+      "resident": "R1",
+      "message": "Bonjour, il fait beau aujourd'hui."
+    }
+  ]
+}
