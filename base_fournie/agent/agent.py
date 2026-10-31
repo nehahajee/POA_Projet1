@@ -20,8 +20,8 @@ def main(argv):
     """Lance le robot sur une carte et un scénario, et écrit la trace.
         Paramètres : argv (la liste des arguments de la ligne de commande,
         le nom du programme y compris).
-        Renvoie : 0 si tout s'est bien passé, 1 si un fichier est absent ou invalide 
-        et 2 si le nombre d'arguments est mauvais."""
+        Renvoie : 0 si tout s'est bien passé, 1 si un fichier est absent ou invalide
+        ou si la trace ne peut pas être écrite, et 2 si le nombre d'arguments est mauvais."""
     if len(argv) != 5:
         print("usage: python agent.py <carte> <scenario> <dossier_donnees> <trace>", file=sys.stderr)
         return 2
@@ -45,8 +45,12 @@ def main(argv):
 
     executer_scenario(robot, scenario, dico)
 
-    chemin_trace.parent.mkdir(parents=True, exist_ok=True)
-    trace.ecrire(chemin_trace)
+    try:
+        chemin_trace.parent.mkdir(parents=True, exist_ok=True)
+        trace.ecrire(chemin_trace)
+    except OSError as err:
+        print(f"impossible d'ecrire la trace {chemin_trace} : {err}", file=sys.stderr)
+        return 1
     return 0
 
 

@@ -4,6 +4,6 @@
   "equipe": ["HAJEE Neha", "CAMARA ALY Zeinab"],
   "langage": "Python 3",
   "preparation": [],
-  "commande": ["python", "agent/agent.py"],
-  "video": "demo.mp4"
+  "commande": ["python3", "base_fournie/agent/agent.py"],
+  "video": "demonstration_video.mp4"
 }

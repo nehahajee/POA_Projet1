@@ -87,6 +87,13 @@ class TestAgent(unittest.TestCase):
         self.assertFalse(self.trace.exists())
         self.assertNotEqual(erreur, "")
 
+    def test_scenario_5(self):
+        """Chemin de trace qui est un dossier : la trace ne peut pas etre
+        ecrite, code 1 et message sur stderr, sans exception."""
+        code, erreur = self.lancer([CARTE, SCENARIO, DONNEES, self.dossier.name])
+        self.assertEqual(code, 1)
+        self.assertIn("trace", erreur)
+
 
 if __name__ == "__main__":
     unittest.main()
