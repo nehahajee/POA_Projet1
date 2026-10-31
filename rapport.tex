@@ -1,0 +1,152 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
+\usepackage[hidelinks]{hyperref}
+
+% Définition des couleurs pour l'architecture
+\definecolor{bleu}{RGB}{28, 78, 128}
+\definecolor{bleuclair}{RGB}{235, 243, 250}
+\definecolor{orange}{RGB}{180, 90, 20}
+\definecolor{orangeclair}{RGB}{250, 240, 230}
+\definecolor{vert}{RGB}{30, 120, 60}
+\definecolor{vertclair}{RGB}{230, 245, 235}
+\definecolor{gris}{RGB}{100, 100, 100}
+\definecolor{grisclair}{RGB}{240, 240, 240}
+
+% Commandes utilitaires
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\cle}[1]{\textbf{#1}}
+\newcommand{\mesure}[1]{\par\noindent\small\textit{Mesure : #1}\normalsize\par}
+\newcommand{\afaire}[1]{\textcolor{red}{\textit{[À rédiger : #1]}}}
+
+\lstset{
+  basicstyle=\ttfamily\small, 
+  breaklines=true, 
+  frame=single, 
+  columns=fullflexible,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ç}{{\c c}}1
+}
+
+\begin{document}
+\pagestyle{empty}
+
+\begin{center}
+  {\Large\bfseries\color{bleu} Projet 1 - Le robot de réconfort}\\[2pt]
+  {\small Master 1 Informatique - POA - CAMARA Zéïnab Aly \,\&\, HAJEE Neha \\
+  Enseignants : Vetea Jacot, Florian Lecourt - 2026-2027 \\
+  Dépôt : \url{https://github.com/nehahajee/POA_Projet1} \quad Vidéo : \code{demo.mp4}}
+\end{center}
+\vspace{-6pt}
+
+% ====================================================================
+\section{Architecture}
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\small, >=Stealth, node distance=7mm,
+  box/.style={draw=bleu,fill=bleuclair,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
+  mon/.style={draw=orange,fill=orangeclair,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
+  dec/.style={draw=vert,fill=vertclair,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
+  fic/.style={draw=gris,fill=grisclair,rounded corners=2pt,align=center,inner sep=3pt,minimum height=7mm},
+  fl/.style={->,thick,color=gris},
+  lbl/.style={font=\scriptsize\itshape,color=gris,inner sep=1pt}]
+
+  \node[fic] (json) {4 fichiers\\JSON};
+  \node[box,right=8mm of json] (val) {\code{validation.py}\\contrôle du contenu};
+  \node[box,right=8mm of val] (ag) {\code{agent.py}\\assemble, écrit la trace};
+
+  \node[dec,below=9mm of val,minimum width=44mm] (dec) {\textbf{Décision}\\\code{decision.py} $\cdot$ \code{deplacement.py}\\\code{armoire.py} $\cdot$ \code{traitement\_messages.py}};
+  \node[mon,right=17mm of dec,minimum width=32mm] (robot) {\textbf{Robot}\\perception $\cdot$ \textbf{mémoire}\\actions $\cdot$ journal};
+  \node[box,right=22mm of robot,minimum width=28mm] (env) {\textbf{Environnement}\\seul à lire la grille\\et les objets};
+  \node[fic,below=8mm of robot] (trace) {\code{trace.json}};
+  \node[fic,left=10mm of trace] (aff) {\code{affichage.py}\\(rejoue la trace)};
+
+  \draw[fl] (json) -- (val);
+  \draw[fl] (val) -- (ag);
+  \draw[fl] (ag.south) -- ++(0,-3.2mm) -| (env.north);
+  \draw[fl] (ag.south) -- ++(0,-3.2mm) -| (robot.north);
+  \draw[fl] (dec.east) -- node[lbl,above]{actions} (robot.west);
+  \draw[fl,<->] (robot.east) -- node[lbl,above]{\code{percevoir}} node[lbl,below]{\code{est\_libre}} (env.west);
+  \draw[fl] (robot.south) -- node[lbl,right]{une ligne par action} (trace.north);
+  \draw[fl,dashed] (trace.west) -- (aff.east);
+\end{tikzpicture}
+\end{center}
+\vspace{-4pt}
+
+\raggedright
+\begin{tabular}{@{}p{1.7cm}p{5.9cm}p{9.0cm}@{}}
+\toprule
+\cle{Couche} & \cle{Où} & \cle{Rôle} \\
+\midrule
+Perception & \code{Robot.percevoir} & lit les 4 voisines (mur, libre, armoire, dictionnaire, résident) et le casier courant devant l'armoire \\
+Mémoire & \code{CarteMentale} (\code{robot.py}) & \code{\{case: type\}} ; une case absente est \emph{inconnue}, supposée libre \\
+Décision & \raggedright\code{decision.py, deplacement.py, armoire.py, traitement\_messages.py} & enchaîne une demande ; BFS ; 15 candidats triés (roue de Plutchik) ; premier mot reconnu \\
+Action & \raggedright\code{Robot.avancer, chercher, consulter, prendre, donner, attendre} & vérifie la légalité (\code{ValueError} sinon), met à jour l'état, journalise \emph{avant} d'agir \\
+\bottomrule
+\end{tabular}
+
+\subsection*{Pourquoi ces frontières}
+\begin{itemize}
+  \item \cle{Le robot ne reçoit jamais la grille} : \code{agent.py} lui passe la carte \emph{sans} le champ \code{grille}. Il ne peut qu'interroger l'\code{Environnement} (\code{percevoir}, \code{est\_libre}, \code{contenu\_casier}), seul module autorisé à lire \code{grille} et \code{objet} (énoncé 3.2). La contrainte est donc tenue par la structure, pas par de la discipline.
+  \item \cle{La décision n'agit pas directement} : elle passe par les méthodes du robot, qui refusent une action illégale et journalisent. Un pas illégal est impossible à produire par accident.
+  \item \cle{La validation est séparée de l'agent} : elle lit la grille pour juger le \emph{fichier} (22 cas de 5.6), mais ne dit jamais si un résident est atteignable.
+  \item \cle{Projet 2} : plusieurs \code{Robot} peuvent partager un même \code{Environnement} ; chaque robot garde sa propre mémoire.
+\end{itemize}
+
+% ====================================================================
+\section{Stratégie de replanification}
+
+\textbf{Planifier sur une carte incomplète.} Le robot cherche un chemin par \emph{parcours en largeur} sur sa carte mentale, en supposant libre toute case inconnue (hypothèse optimiste, annexe B.5). L'armoire, le dictionnaire et les résidents ne sont pas traversables : la destination est l'ensemble de leurs cases adjacentes.
+
+\textbf{Quand un mur est découvert.} Après chaque pas, le robot perçoit et met sa mémoire à jour. \code{deplacement()} vérifie, \emph{avant} chaque pas, que la case suivante est encore traversable d'après la mémoire ; sinon il s'arrête avant de se cogner. \code{rejoindre()} \cle{recalcule alors tout le chemin} depuis la position courante : on ne répare pas le plan, car un BFS sur une grille de cette taille est bon marché et une réparation locale serait plus fragile. Différence avec l'annexe B.5 : on ne replanifie pas à chaque pas, \emph{seulement quand le plan est invalidé}.
+\mesure{\code{appartement\_01}, trajet vers R1 : le mur $[6,7]$ est découvert en arrivant en $[6,6]$ ; 7 BFS, 31 pas, détour par le haut puis par $[4,11]$.}
+
+\textbf{Coût.} Un trajet coûte $1 + k$ BFS, où $k$ est le nombre de plans invalidés ; chaque BFS est en $O(H \times L)$. L'algorithme termine : chaque replanification est causée par un mur \emph{nouvellement} découvert, et il n'y en a qu'un nombre fini (un garde-fou lève une erreur si le même plan échoue deux fois).
+\mesure{\code{scenario\_01} : 31 BFS pour 260 pas. Grand appartement $24\times40$ (\code{test\_grand}) : 6 demandes, 1469 pas, 98 BFS, moins de 0,2 s (démarrage de Python compris).}
+
+\textbf{Quand aucun chemin n'existe.} Les cases inconnues étant supposées libres, la carte mentale contient \emph{au moins} tous les chemins réels : si le BFS échoue dessus, aucun chemin réel n'existe (annexe B.6). Le robot déclare l'échec sans jamais lire la grille.
+\mesure{\code{test\_dico\_inaccessible} : preuve en 11 pas pour la demande 1, puis \textbf{0 pas} pour la demande 2 : la mémoire s'en souvient.}
+
+% ====================================================================
+\section{Critique de la règle de repli}
+
+\textbf{La règle sur un exemple.} Armoire dont la colonne \emph{tristesse} est vide, message « Je me sens tellement seule ce soir » $\rightarrow$ tristesse/moyenne. Le casier exact est vide, ainsi que la colonne voisine \emph{surprise} ; le robot retient donc \emph{dégoût}/moyenne $[1,5]$ (distance 1) et livre un \cle{désodorisant} (\code{repli = voisine\_1}).
+
+\textbf{Est-elle défendable ?} \emph{Pour} : elle est simple, déterministe, et vérifiable depuis la trace (deux binômes corrects livrent la même chose). \emph{Contre} : la distance sur la roue de Plutchik mesure la \emph{parenté} de deux émotions, pas la \emph{compatibilité de réconfort}. Le même exemple le montre : dégoût est voisin de tristesse sur la roue, mais un désodorisant offert à une personne triste est déplacé, voire blessant. La règle préfère toujours \emph{un objet} à \emph{aucun objet}, alors qu'un mauvais objet peut être pire que rien. Enfin les deux voisines à distance 1 sont traitées de façon symétrique (le sens horaire ne sert qu'à départager), sans rien savoir de ce que l'objet \emph{fait}.
+
+\textbf{Une meilleure règle.} Remplacer la distance sur la roue par un \emph{score de compatibilité émotion $\times$ objet} : chaque objet déclare les émotions qu'il apaise (avec un poids) et celles pour lesquelles il est à éviter. Le robot choisit l'objet de meilleur score, l'écart d'intensité servant de pénalité ; \cle{sous un seuil, il ne donne rien} et échoue avec le motif \code{aucun objet adapté} plutôt que de livrer un objet inadapté.
+
+\textbf{Ce qu'il faudrait changer dans les fichiers.} \code{armoire.json} : chaque casier gagne un champ \code{apaise} (liste d'objets \code{\{emotion, poids\}}) et un champ \code{evite} (liste d'émotions). Le rangement par position (colonne = émotion) devient une simple commodité, plus une règle. \code{armoire.py} : \code{calculer\_candidats} trie par score au lieu de la clé 6.2. La \cle{trace} : \code{repli} (4 valeurs fixées par \code{reconfort\_io}) est remplacé ou complété par un champ \code{score}. \code{validation.py} : contrôle des nouveaux champs (émotions connues, poids dans $[0,1]$).
+
+% ====================================================================
+\newpage
+\section{Trois échecs de notre robot}
+Cette section présente trois situations où le robot se comporte de manière non optimale ou incorrecte, accompagnées d'une analyse de la cause et des solutions apportées ou envisagées.
+
+\subsection{Échec 1 : le résident muré bloquait tout le scénario}
+Dans cette situation, le robot prenait l'objet puis découvrait que le résident était inaccessible à cause des murs qui l'entouraient. En conséquence, le robot ne pouvait pas reposer l'objet, donc plus aucune action \texttt{PRENDRE} n'était possible et les demandes suivantes restaient bloquées. La cause vient de l'ordre des étapes : le robot ne découvrait l'inaccessibilité qu'après avoir pris l'objet, alors que l'énoncé ne prévoit aucune action pour le reposer et qu'il ne peut porter qu'un objet à la fois.
+
+La correction mise en place consiste à vérifier l'accessibilité du résident avant \texttt{PRENDRE}, grâce à la perception et à la mémoire du robot, et jamais en lisant la grille. Si le résident est inaccessible, on déclare un échec \og résident inaccessible\fg{} et on passe à la demande suivante, les mains vides. Sur \texttt{cartes\_test/test\_mure.json}, les demandes 2 et 3 (résident muré) échouent sans objet et la demande 4 réussit. Cette correction a un coût : le robot fait un aller-retour de plus vers le résident (sur \texttt{scenario\_01}, le scénario passe ainsi de 160 à 260 pas). Il reste une limite pour une deuxième demande vers le même résident muré : le robot retourne quand même au dictionnaire et à l'armoire avant d'échouer (53 pas pour la demande 3 de \texttt{test\_mure.json}), alors qu'un BFS sur sa carte mentale en début de demande suffirait à prouver l'échec en 0 pas.
+
+\subsection{Échec 2 : la négation, \og je ne suis pas triste\fg{}}
+Lorsqu'un résident écrit \og Je ne suis pas triste, je suis heureuse.\fg{}, le robot comprend \emph{tristesse/moyenne} et lui apporte une couverture, alors que le même résident qui écrit seulement \og Je suis heureuse.\fg{} reçoit une photo de famille (\emph{joie/moyenne}). Le robot apporte donc un objet de réconfort à quelqu'un qui va bien. Cet échec ne se voit pas dans la trace, la livraison étant notée comme réussie.
+
+Ce comportement est normal au sens de l'énoncé : notre robot applique exactement la règle de la section 6.1, où le premier mot présent dans le dictionnaire donne la réponse. Ici, \og triste\fg{} arrive avant \og heureuse\fg{}, et les mots \og ne\fg{} et \og pas\fg{} ne sont pas dans le dictionnaire, donc ils sont ignorés. La cause est structurelle : le robot lit les mots un par un, sans tenir compte du contexte sémantique de la négation.
+
+Une solution consisterait à repérer les mots de négation (\og ne\fg{}, \og pas\fg{}, \og jamais\fg{}, \og plus\fg{}). Si l'un d'eux précède un mot reconnu de près, on ignore ce mot et on continue la lecture, ce qui donnerait ici \emph{joie}. Il faudrait pour cela ajouter une liste de négations dans \texttt{dictionnaire.json} et modifier \texttt{trouver\_emotion} dans \texttt{traitement\_messages.py}.
+
+\subsection{Échec 3 : l'impasse}
+Le robot ne perçoit que les 4 cases autour de lui et suppose libres les cases inconnues (hypothèse optimiste). Il peut donc s'engager dans un cul-de-sac avant de pouvoir le constater. Sur \texttt{cartes\_test/test\_impasse.json}, pour aller du départ au dictionnaire, il effectue 26 déplacements au lieu de 4. La route du sud est la plus courte, mais à égalité de longueur le BFS explore le nord en premier. Ensuite, chaque mur découvert n'allonge le nouveau plan que d'un ou deux pas : le robot remonte tout le couloir du nord, entre dans le renfoncement en \texttt{[2, 7]} et va jusqu'en \texttt{[1, 9]} avant de faire demi-tour. La demande réussit, mais elle coûte 74 pas. Ce n'est pas un bogue du BFS, mais le coût inhérent à l'hypothèse optimiste en univers inconnu.
+
+Une solution serait de limiter l'exploration d'une direction inconnue : si le plan s'allonge de plus de quelques pas (par exemple 3) par rapport à l'estimation initiale, le robot essaie d'abord l'autre route. Une variante plus simple consiste à attribuer un coût supérieur aux cases inconnues comparativement aux cases déjà vues libres (recherche pondérée au lieu du BFS pur). Le robot privilégie alors les chemins qu'il connaît tout en conservant la capacité d'explorer.
+
+\end{document}
