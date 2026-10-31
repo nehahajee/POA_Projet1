@@ -1,0 +1,29 @@
+{
+  "format": "robot-reconfort/scenario",
+  "version": 1,
+  "nom": "scenario_mure",
+  "carte": "test_mure",
+  "armoire": "armoire_standard",
+  "demandes": [
+    {
+      "numero": 1,
+      "resident": "R1",
+      "message": "Je me sens tellement seule ce soir, personne n'est passé."
+    },
+    {
+      "numero": 2,
+      "resident": "R2",
+      "message": "Je suis un peu inquiet, j'entends du bruit dans le couloir."
+    },
+    {
+      "numero": 3,
+      "resident": "R2",
+      "message": "Je suis anxieux."
+    },
+    {
+      "numero": 4, 
+      "resident" : "R1", 
+      "message" : "J'ai le cafard ce soir."
+    }
+  ]
+}
