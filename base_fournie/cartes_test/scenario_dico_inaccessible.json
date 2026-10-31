@@ -1,0 +1,19 @@
+{
+  "format": "robot-reconfort/scenario",
+  "version": 1,
+  "nom": "scenario_dico_inaccessible",
+  "carte": "test_dico_inaccessible",
+  "armoire": "armoire_standard",
+  "demandes": [
+    {
+      "numero": 1,
+      "resident": "R1",
+      "message": "Je me sens tellement seule ce soir."
+    },
+    {
+      "numero": 2,
+      "resident": "R1",
+      "message": "Je suis anxieux depuis ce matin."
+    }
+  ]
+}

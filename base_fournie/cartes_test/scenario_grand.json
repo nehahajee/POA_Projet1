@@ -1,0 +1,39 @@
+{
+  "format": "robot-reconfort/scenario",
+  "version": 1,
+  "nom": "scenario_grand",
+  "carte": "test_grand",
+  "armoire": "armoire_standard",
+  "demandes": [
+    {
+      "numero": 1,
+      "resident": "R1",
+      "message": "Je me sens tellement seule ce soir."
+    },
+    {
+      "numero": 2,
+      "resident": "R2",
+      "message": "Je suis un peu inquiet, j'entends du bruit."
+    },
+    {
+      "numero": 3,
+      "resident": "R3",
+      "message": "Ce bouton est cassé, ça m'agace."
+    },
+    {
+      "numero": 4,
+      "resident": "R4",
+      "message": "Ma fille a appelé, je suis vraiment heureux."
+    },
+    {
+      "numero": 5,
+      "resident": "R1",
+      "message": "Je suis anxieux depuis ce matin."
+    },
+    {
+      "numero": 6,
+      "resident": "R3",
+      "message": "J'ai le cafard aujourd'hui."
+    }
+  ]
+}
