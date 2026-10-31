@@ -24,17 +24,15 @@
 
 \begin{document}
 
-% ------------------------------------------------------------------ En-tete
-% Un simple bloc en haut de la page 1 (pas de page de titre : 3 pages maximum)
 \begin{center}
-  {\Large\bfseries Projet 1 --- Le robot de réconfort}\\[0.3cm]
-  Master 1 Informatique --- POA --- projet de semestre\\[0.2cm]
+  {\Large\bfseries Projet 1 - Le robot de réconfort}\\[0.3cm]
+  Master Génie Logiciel - POA - projet de semestre\\[0.2cm]
   HAJEE Neha \quad --- \quad CAMARA ALY Zeinab\\[0.2cm]
   Enseignants : Vetea Jacot, Florian Lecourt --- Année universitaire 2026--2027\\[0.2cm]
   Dépôt : \url{https://github.com/nehahajee/POA_Projet1} --- Vidéo : \texttt{demo.mp4}
 \end{center}
 
-% ------------------------------------------------------------------
+
 \section{Architecture}
 % → enonce 11.1 : un schema, et la justification des frontieres entre
 %   perception, memoire, decision et action.
@@ -142,36 +140,66 @@
 %   emotions) ; ce qui change dans armoire.py (calculer_candidats) et dans la trace.
 \afaire{}
 
-% ------------------------------------------------------------------
+\newpage
 \section{Trois échecs de notre robot}
-% → enonce 11.4 : trois situations ou il se comporte mal, avec l'analyse de la cause.
-%   Pour chacun : la situation, la cause, ce que nous avons fait (ou ferions).
+Ici nous verrons trois situations où le robot se comporte mal, avec l'analyse de la cause
+et une explication de ce que nous avons fait ou de ce que nous ferions.
 
 \subsection{Échec 1 : le résident muré bloquait tout le scénario}
-% → situation : le robot prenait l'objet puis decouvrait que le resident etait mure ;
-%   il ne peut pas reposer l'objet, donc plus de PRENDRE possible : demandes suivantes
-%   bloquees.
-% → correction : verifier l'accessibilite du resident AVANT PRENDRE, en marchant
-%   (perception + memoire, jamais la grille), puis echec « resident inaccessible »
-%   et passage a la demande suivante (choix valide par les enseignants).
-% données : cout du detour sur scenario_01 : 160 pas sans verification, 260 avec ;
-%   cartes_test/test_mure.json : demandes 2 et 3 en echec sans objet, demande 4 reussie.
-\afaire{}
+Dans cette situation, le robot prenait l'objet puis découvrait que le résident était inaccessible
+à cause des murs qui l'entouraient. En conséquence, le robot ne pouvait pas reposer l'objet, donc
+plus aucune action \texttt{PRENDRE} n'était possible et les demandes suivantes restaient bloquées.
+La cause vient de l'ordre des étapes : le robot ne découvrait l'inaccessibilité qu'après avoir
+pris l'objet, alors que l'énoncé ne prévoit aucune action pour le reposer et qu'il ne peut
+porter qu'un objet à la fois.
 
-\subsection{Échec 2 : il retourne au dictionnaire pour un résident qu'il sait muré}
-% → situation : 2e demande vers le meme resident mure ;
-% → cause : la memoire n'est consultee qu'a l'etape « resident », apres le
-%   dictionnaire et l'armoire ;
-% données : cartes_test/test_mure.json, demande 3 : 53 pas pour un echec deja prouve ;
-% → amelioration : tester d'abord le chemin sur la carte mentale (sans la grille).
-\afaire{}
+La correction que nous avons mise en place consiste à vérifier l'accessibilité du résident avant
+\texttt{PRENDRE}, grâce à la perception et à la mémoire du robot, et jamais en lisant la grille
+. Si le résident est inaccessible, on déclare un échec
+\og résident inaccessible\fg{} et on passe à la demande suivante, les mains vides.
+Sur \texttt{cartes\_test/test\_mure.json}, les demandes 2 et 3 (résident muré) échouent sans objet
+et la demande 4 réussit. Cette correction a un coût, le robot fait un aller-retour de plus
+vers le résident. Sur \texttt{scenario\_01}, le scénario passe ainsi de 160 à 260 pas.
+Il reste aussi une limite, pour une deuxième demande vers le même résident muré, le robot
+retourne quand même au dictionnaire et à l'armoire avant d'échouer (53 pas pour la demande 3 de
+\texttt{test\_mure.json}), alors qu'un BFS sur sa carte mentale en début de demande suffirait à
+prouver l'échec en 0 pas.
 
-\subsection{Échec 3 : \afaire{titre}}
-% → au choix, a partir de nos essais :
-%   - l'impasse (cartes_test/test_impasse.json) : l'hypothese optimiste fait entrer le
-%     robot dans un cul-de-sac avant de le voir ;
-%   - la fouille de l'armoire repasse par des casiers deja vus vides (annexe C) ;
-%   - le premier mot reconnu gagne : « je ne suis pas triste » donne tristesse.
-\afaire{}
+\subsection{Échec 2 : la négation, \og je ne suis pas triste\fg{}}
+Lorsqu'un résident écrit \og Je ne suis pas triste, je suis heureuse.\fg{}, le robot comprend
+\emph{tristesse/moyenne} et lui apporte une couverture, alors que le même résident qui écrit
+seulement \og Je suis heureuse.\fg{} reçoit une photo de famille (\emph{joie/moyenne}).
+Le robot apporte donc un objet de réconfort à quelqu'un qui va bien. Cet échec ne se voit 
+pas dans la trace, la livraison est notée comme réussie.
+
+Ce comportement est normal au sens de l'énoncé, notre robot applique exactement la règle de la
+section 6.1, où le premier mot présent dans le dictionnaire donne la réponse. Ici, \og triste\fg{}
+arrive avant \og heureuse\fg{}, et les mots \og ne\fg{} et \og pas\fg{} ne sont pas dans le
+dictionnaire, donc ils sont ignorés. La cause est donc là, elle lit les mots un
+par un, sans tenir compte du sens de la phrase.
+
+Une solution qu'on pourrait mettre en place est de repérer les mots de négation (\og ne\fg{},
+\og pas\fg{}, \og jamais\fg{}, \og plus\fg{}), si l'un d'eux précède un mot reconnu de peu de
+mots, on ignore ce mot et on continue la lecture, ce qui donnerait ici \emph{joie}. Il faudrait
+pour cela ajouter une liste de négations dans \texttt{dictionnaire.json} et modifier
+\texttt{trouver\_emotion} dans \texttt{traitement\_messages.py}.
+
+\subsection{Échec 3 : l'impasse}
+Le robot ne voit que les 4 cases autour de lui et suppose libres les cases inconnues (hypothèse
+optimiste). Il peut donc entrer dans un cul-de-sac avant de pouvoir le voir. Sur
+\texttt{cartes\_test/test\_impasse.json}, pour aller du départ au dictionnaire, il fait 26
+déplacements au lieu de 4. La route du sud est la plus courte, mais à égalité de longueur le BFS
+explore le nord en premier. Ensuite, chaque mur découvert n'allonge le nouveau plan que d'un ou
+deux pas, le robot remonte donc tout le couloir du nord, entre dans le renfoncement en
+\texttt{[2, 7]} et va jusqu'en \texttt{[1, 9]} avant de faire demi-tour. La demande réussit quand
+même, mais elle coûte 74 pas. Ce n'est pas une erreur du BFS, c'est le prix de l'hypothèse
+optimiste quand la carte est encore inconnue.
+
+Une solution serait de limiter l'exploration d'une direction inconnue, si le plan s'allonge de
+plus de quelques pas (par exemple 3) par rapport à l'estimation de départ, le robot essaie
+d'abord l'autre route et ne revient à celle-ci qu'une fois les autres épuisées. Une variante plus
+simple consiste à donner un coût plus élevé aux cases inconnues qu'aux cases déjà vues libres
+(recherche pondérée au lieu du BFS). Le robot préfère alors les chemins qu'il connaît, sans
+renoncer pour autant à explorer.
 
 \end{document}
