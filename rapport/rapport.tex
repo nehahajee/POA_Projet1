@@ -1,0 +1,177 @@
+% Rapport du projet 1 -- Robot de reconfort (structure imposee : enonce section 11)
+% 3 pages MAXIMUM, quatre points et rien d'autre : pas de page de titre, pas de
+% table des matieres, pas d'introduction ni de conclusion.
+% Les commentaires « % → » rappellent ce que l'enonce attend, et les « % données : »
+% sont les chiffres mesures sur notre code ; a supprimer une fois redige.
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single, columns=fullflexible,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {à}{{\`a}}1 {ê}{{\^e}}1 {ç}{{\c c}}1}
+
+% Marque visible de ce qui reste a rediger
+\newcommand{\afaire}[1]{\textcolor{red}{\textit{[À rédiger : #1]}}}
+
+\begin{document}
+
+% ------------------------------------------------------------------ En-tete
+% Un simple bloc en haut de la page 1 (pas de page de titre : 3 pages maximum)
+\begin{center}
+  {\Large\bfseries Projet 1 --- Le robot de réconfort}\\[0.3cm]
+  Master 1 Informatique --- POA --- projet de semestre\\[0.2cm]
+  HAJEE Neha \quad --- \quad CAMARA ALY Zeinab\\[0.2cm]
+  Enseignants : Vetea Jacot, Florian Lecourt --- Année universitaire 2026--2027\\[0.2cm]
+  Dépôt : \url{https://github.com/nehahajee/POA_Projet1} --- Vidéo : \texttt{demo.mp4}
+\end{center}
+
+% ------------------------------------------------------------------
+\section{Architecture}
+% → enonce 11.1 : un schema, et la justification des frontieres entre
+%   perception, memoire, decision et action.
+
+\subsection{Schéma}
+% → schema : Environnement (seul a lire la grille et les objets) <-> Robot
+%   (perception / memoire / action) <- decision.py (decision), avec agent.py
+%   qui charge, valide et assemble. affichage.py a part : il rejoue la trace.
+% → \includegraphics[width=\linewidth]{schema_architecture.pdf}
+\afaire{schéma}
+
+\subsection{Rôle de chaque module}
+% données :
+%   agent.py             point d'entree : 4 arguments, validation, assemblage, ecriture de la trace
+%   validation.py        controle du contenu des 4 fichiers (enonce 5.6), avant le lancement
+%   environnement.py     le simulateur : seul a lire la grille et le contenu des casiers
+%   robot.py             perception (percevoir), memoire (CarteMentale), actions (avancer,
+%                        chercher, consulter, prendre, donner, attendre) et journalisation
+%   deplacement.py       planification : BFS sur la carte mentale, rejoindre avec replanification
+%   armoire.py           Roue de Plutchik, 15 candidats tries (6.2), trajet du selecteur, fouille
+%   traitement_messages.py  normalisation du message et premier mot reconnu (6.1)
+%   decision.py          enchainement d'une demande : dictionnaire, armoire, resident, PRENDRE, DONNER
+\begin{tabular}{@{}lll@{}}
+  \toprule
+  Couche & Fichier / classe & Rôle \\
+  \midrule
+  Perception & \afaire{} & \afaire{} \\
+  Mémoire    & \afaire{} & \afaire{} \\
+  Décision   & \afaire{} & \afaire{} \\
+  Action     & \afaire{} & \afaire{} \\
+  \bottomrule
+\end{tabular}
+
+\subsection{Justification des frontières}
+% → pourquoi le Robot ne recoit jamais la grille (connaissances = carte sans "grille",
+%   enonce 3.3) et ne peut qu'interroger l'Environnement (percevoir, est_libre,
+%   contenu_casier) ;
+% → pourquoi la decision ne fait aucune action directement (elle passe par le Robot,
+%   qui verifie la legalite et journalise : un pas illegal leve ValueError) ;
+% → pourquoi la validation est separee de l'agent (elle lit la grille pour verifier le
+%   FICHIER, mais ne dit jamais si un resident est atteignable) ;
+% → ce que ca apporte pour le projet 2 (plusieurs robots partagent un Environnement).
+\afaire{}
+
+% ------------------------------------------------------------------
+\section{Stratégie de replanification}
+% → enonce 11.2 : que fait le robot quand il decouvre un mur ? Replanifie-t-il tout,
+%   ou repare-t-il son plan ? Quel cout ?
+
+\subsection{Planifier sur une carte incomplète}
+% → hypothese optimiste : une case inconnue est supposee libre (annexe B.5) ;
+%   BFS sur la carte mentale vers les cases libres adjacentes a la cible.
+\afaire{}
+
+\subsection{Ce qui se passe quand un mur est découvert}
+% → apres chaque pas : perception, mise a jour de la memoire ; si la case suivante
+%   du plan est un mur nouvellement vu, le robot s'arrete et RECALCULE tout le
+%   chemin depuis sa position (on ne repare pas le plan) ;
+% → difference avec l'annexe B.5, qui replanifie a CHAQUE pas : nous ne replanifions
+%   que quand le plan est invalide ;
+% données : appartement_01, trajet vers R1 : mur decouvert en [6, 7], detour par [4, 11]
+%   (visible dans la video).
+\afaire{}
+
+\subsection{Coût}
+% → nombre de BFS = 1 + nombre de murs qui coupent le plan ; chaque BFS coute
+%   O(hauteur x largeur) ; termine car le nombre de murs est fini ;
+% données : grand appartement de test 24 x 40 (cartes_test/test_grand.json) :
+%   6 demandes, 1469 pas, 0,05 s d'execution ;
+% données : impasse (cartes_test/test_impasse.json) : demi-tour, cout de l'hypothese optimiste.
+\afaire{}
+
+\subsection{Quand aucun chemin n'existe : la preuve d'inaccessibilité}
+% → si le BFS echoue sur la carte mentale (inconnu = libre), aucun chemin reel
+%   n'existe (annexe B.6) : le robot s'arrete et declare l'echec, sans jamais lire
+%   la grille ;
+% données : cartes_test/test_dico_inaccessible.json : preuve en 11 pas, puis 0 pas pour
+%   la demande suivante (la memoire s'en souvient).
+\afaire{}
+
+% ------------------------------------------------------------------
+\section{Critique de la règle de repli}
+% → enonce 11.3 : la regle est-elle defendable ? En proposer une meilleure, et dire
+%   ce qu'il faudrait changer dans les fichiers pour la mettre en oeuvre.
+
+\subsection{Ce que fait la règle, sur un exemple}
+% données : cartes_test/scenario_colonne_vide.json + donnees_test/armoire_tristesse_vide.json
+%   (colonne tristesse vide) : « Je me sens tellement seule ce soir. » -> tristesse/moyenne,
+%   repli voisine_1 sur [1, 5] = degout/moyenne -> objet « desodorisant » ;
+%   le sens horaire departage surprise et degout, a egalite de distance.
+\afaire{}
+
+\subsection{Est-elle défendable ?}
+% → arguments pour (simple, deterministe, verifiable par la trace) et contre (la
+%   distance sur la roue n'est pas la proximite de reconfort : un objet "degout"
+%   peut etre inadapte, voire blessant, pour une personne triste).
+\afaire{}
+
+\subsection{Une meilleure règle}
+\afaire{proposition}
+
+\subsection{Ce qu'il faudrait changer dans les fichiers}
+% → armoire_standard.json et/ou dictionnaire.json : quels champs ajouter
+%   (exemple : etiquettes multiples par objet, table de compatibilite entre
+%   emotions) ; ce qui change dans armoire.py (calculer_candidats) et dans la trace.
+\afaire{}
+
+% ------------------------------------------------------------------
+\section{Trois échecs de notre robot}
+% → enonce 11.4 : trois situations ou il se comporte mal, avec l'analyse de la cause.
+%   Pour chacun : la situation, la cause, ce que nous avons fait (ou ferions).
+
+\subsection{Échec 1 : le résident muré bloquait tout le scénario}
+% → situation : le robot prenait l'objet puis decouvrait que le resident etait mure ;
+%   il ne peut pas reposer l'objet, donc plus de PRENDRE possible : demandes suivantes
+%   bloquees.
+% → correction : verifier l'accessibilite du resident AVANT PRENDRE, en marchant
+%   (perception + memoire, jamais la grille), puis echec « resident inaccessible »
+%   et passage a la demande suivante (choix valide par les enseignants).
+% données : cout du detour sur scenario_01 : 160 pas sans verification, 260 avec ;
+%   cartes_test/test_mure.json : demandes 2 et 3 en echec sans objet, demande 4 reussie.
+\afaire{}
+
+\subsection{Échec 2 : il retourne au dictionnaire pour un résident qu'il sait muré}
+% → situation : 2e demande vers le meme resident mure ;
+% → cause : la memoire n'est consultee qu'a l'etape « resident », apres le
+%   dictionnaire et l'armoire ;
+% données : cartes_test/test_mure.json, demande 3 : 53 pas pour un echec deja prouve ;
+% → amelioration : tester d'abord le chemin sur la carte mentale (sans la grille).
+\afaire{}
+
+\subsection{Échec 3 : \afaire{titre}}
+% → au choix, a partir de nos essais :
+%   - l'impasse (cartes_test/test_impasse.json) : l'hypothese optimiste fait entrer le
+%     robot dans un cul-de-sac avant de le voir ;
+%   - la fouille de l'armoire repasse par des casiers deja vus vides (annexe C) ;
+%   - le premier mot reconnu gagne : « je ne suis pas triste » donne tristesse.
+\afaire{}
+
+\end{document}
